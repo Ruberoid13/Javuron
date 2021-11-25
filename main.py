@@ -5,12 +5,28 @@ import csv
 import json
 
 
-def open_excel(file_to_open):
+def read_excel(shit):
+    workshit = shit
     rows = []
     columns = []
+    for row_index in range(workshit.min_row, workshit.max_row + 1):
+        for col_index in range(workshit.min_column, workshit.max_column + 1):
+            cell = workshit.cell(row=row_index, column=col_index).value
+            if cell is None:
+                cell = '-'
+            rows.append(cell)
+        columns.append(rows)
+        rows = []
+    return columns
+
+
+def open_excel(file_to_open):
     print('\nOpen_excel working...')
     print('Opening "', file_to_open, '"', sep='')
     workbuk = openpyxl.load_workbook(file_to_open)
+    if len(workbuk.sheetnames) == 1:
+        print('There are 1 sheet: ', workbuk.sheetnames[0], '"', sep='')
+        return read_excel(workbuk[workbuk.sheetnames[0]])
     while True:
         print('There are', len(workbuk.sheetnames), 'sheets:')
         i = 1
@@ -29,39 +45,28 @@ def open_excel(file_to_open):
                 return 'main menu'
             elif 1 <= int(sel) <= len(workbuk.sheetnames):
                 print('Selected "', workbuk.sheetnames[int(sel)], '":\n', sep='')
-                workshit_name = workbuk.sheetnames[int(sel)-1]
-                workshit = workbuk[workshit_name]
-
-                for row_index in range(workshit.min_row, workshit.max_row+1):
-                    for col_index in range(workshit.min_column, workshit.max_column+1):
-                        print('columns =', workshit.max_column)
-                        print('row =', workshit.max_row)
-                        cell = workshit.cell(row=row_index, column=col_index).value
-                        if cell is None:
-                            cell = '-'
-                        rows.append(cell)
-                    columns.append(rows)
-                    rows = []
-                return columns
+                return read_excel(workbuk[workbuk.sheetnames[int(sel)-1]])
             else:
                 print('Value out of range, try again.')
         except ValueError:
             print('Please, enter correct value:')
 
 
-def excel(data):
-    if type(data) is str:
-        print('returned str')
-    elif type(data) is list:
-        print('returned list')
-
-
 def menu():
     print('\nCurrent dir is:', os.getcwd())
+#    print('Please, enter path to a file (eg: "c:\\games\\jerk-o-tron2021") or "x" to exit:')
     print('Please, enter path to a file (eg: "c:\games\jerk-o-tron2021") or "x" to exit:')
-#    path_to_file = input('Please, enter path to a file (eg: "c:\games\jerk-o-tron2021") or "x" to exit:')
-    path_to_file = 'C:/tpr/githubrep/Javuron'
-    os.chdir(path_to_file)
+#    path_to_file = 'C:/tpr/githubrep/Javuron'
+    while True:
+        try:
+            path_to_file = input()
+            if path_to_file == 'x':
+                return 'exit'
+            else:
+                os.chdir(path_to_file)
+                break
+        except FileNotFoundError:
+            print('Wrong path, try again:')
     print('New dir is:', os.getcwd())
     files = []
     i = 0
@@ -94,7 +99,7 @@ def menu():
 
 def open_csv(file_to_open):
     print('\nOpen_csv working...')
-    print('Opening "', file_to_open, '"',sep='')
+    print('Opening "', file_to_open, '"', sep='')
     with open(file_to_open) as csvfile:
         columns = list(csv.reader(csvfile, delimiter=';'))
         return columns
@@ -118,28 +123,34 @@ def open_json(file_to_open):
 
 
 def print_tab(dictionary):
-    print(tabulate(dictionary, headers='firstrow', tablefmt='github'))
+    print(tabulate(dictionary, tablefmt='github'))
+    print('\nOpen other file? y/n')
+    while True:
+        x = input()
+        if x == 'y' or x == 'Y':
+            return 'main menu'
+        elif x == 'n' or x == 'N':
+            return 'exit'
+        else:
+            print('Enter correct value:')
+#    print(tabulate(dictionary, headers='firstrow', tablefmt='github'))
 
 
 def main():
     x = ''
+    y = ''
     while x != 'exit':
         x = menu()
         if x.count('.xlsx') or x.count('xls'):
-            print_tab(open_excel(x))
+            y = print_tab(open_excel(x))
         elif x.count('.json'):
-            print_tab(open_json(x))
+            y = print_tab(open_json(x))
         elif x.count('.csv'):
-            print_tab(open_csv(x))
-
-#    x = open_excel('javu.xlsx')
-#    print_tab(x)
-#    excel(x)
-#    c = open_csv('pizda.csv')
-#    print_tab(c)
-#    j = open_json('hui.json')
-#    print_tab(j)
-#    open_excel('javu.xlsx')
+            y = print_tab(open_csv(x))
+        if y == 'exit':
+            return
+        elif y == 'main menu':
+            pass
 
 
 main()
